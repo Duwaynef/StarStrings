@@ -1,0 +1,66 @@
+name: Dynamic Auto-Branch Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight UTC
+  workflow_dispatch:   # Allows manual trigger
+
+jobs:
+  sync-dynamic-branches:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out your fork with full history
+      - name: Checkout Fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Step 2: Configure Git identity
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 3: Add the parent repo as 'upstream' and fetch its branches
+      - name: Add Upstream Remote
+        run: |
+          # CHANGE THIS to the parent repository you forked from
+          git remote add upstream https://github.com/MrKraken/StarStrings.git
+          git fetch upstream --prune
+
+      # Step 4: Dynamically detect and merge all branches
+      - name: Detect and Sync All Remote Branches
+        run: |
+          # 1. Ask Git for all branches on the upstream remote, 
+          # and clean up the text output to get pure branch names.
+          UPSTREAM_BRANCHES=$(git branch -r | grep 'upstream/' | grep -v 'HEAD' | sed 's/^[[:space:]]*upstream\///')
+
+          echo "[*] Found the following upstream branches to sync:"
+          echo "$UPSTREAM_BRANCHES"
+
+          # 2. Loop through every detected branch
+          for branch in $UPSTREAM_BRANCHES; do
+            echo "------------------------------------------------------"
+            echo "[*] Dynamically syncing branch: $branch"
+            echo "------------------------------------------------------"
+
+            # 3. Track or switch to your fork's copy of that branch
+            # If your fork doesn't have it locally yet, this creates it tracking the origin
+            if git show-ref --verify --quiet refs/heads/$branch; then
+              git checkout $branch
+            else
+              # If the branch exists on your GitHub online but not in this temporary runner runner, pull it down
+              git checkout -b $branch origin/$branch || git checkout -b $branch upstream/$branch
+            fi
+
+            # 4. Safely merge the parent's matching branch into yours
+            if git merge upstream/$branch --allow-unrelated-histories -m "Automated sync: Merged upstream $branch updates"; then
+              
+              # 5. Push the updates back up to your GitHub fork
+              git push origin $branch
+              echo "[+] Successfully synced $branch"
+            else
+              echo "[!] Merge conflict detected on $branch. Skipping push. You will need to fix this manually."
+              git merge --abort
+            fi
+          done

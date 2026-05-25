@@ -62,3 +62,4 @@ Get-ChildItem -Path $PSScriptRoot -Recurse  | Where-Object {
 }
 
 Write-Host "`n[SUCCESS] Synchronization complete!" -ForegroundColor Green
+pause
