@@ -2,8 +2,25 @@
 
 # 1. Parse Configuration
 $ConfigFile = Join-Path $PSScriptRoot "UpdateConf.csv"
+
+# Auto-generate the config file if it is missing
 if (-not (Test-Path $ConfigFile)) {
-    Write-Error "UpdateConf.csv not found!"
+    Write-Host "[!] UpdateConf.csv not found!" -ForegroundColor Yellow
+    Write-Host "[*] Generating a new configuration file with default Star Citizen settings..." -ForegroundColor Cyan
+    
+    # Define the default CSV structure using standard RSI installation paths
+    $DefaultConfig = @"
+Name,Path
+RepoURL,"https://github.com/Duwaynef/StarStrings"
+BaseDir,"C:\Program Files\Roberts Space Industries\StarCitizen"
+StarCitizenPath,"C:\Program Files\Roberts Space Industries\StarCitizen\LIVE"
+"@
+    
+    # Save it to the file
+    $DefaultConfig | Set-Content -Path $ConfigFile
+    
+    Write-Host "[+] Created UpdateConf.csv successfully." -ForegroundColor Green
+    Write-Host "[!] Please open the file, verify your paths are correct for this PC, and run the script again." -ForegroundColor Yellow
     pause
     return
 }
