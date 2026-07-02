@@ -1,5 +1,5 @@
 # MrKraken's String Replacements
-### (English) Community Translated .ini for **Star Citizen [Build: sc-alpha-4.8.0_live_12030094]**
+### (English) Community Translated .ini for **Star Citizen [Build: sc-alpha-4.8.0_live_12122953]**
 > [!WARNING]
 > You **will need to check for an update to this file every patch** - I don't recommend using custom strings on PTU as each new build will likely add new strings. I have an automation setup to push new versions live but please keep in mind that I am UK based and PTU builds normally go up very late UK time, so there may be a few hours delay
 # Changes Included
