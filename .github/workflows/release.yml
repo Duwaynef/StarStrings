@@ -25,7 +25,7 @@ jobs:
 
       - name: Bundle release files
         run: |
-          cd src/For_Players && zip -r ../StarStrings-LIVE.zip USER.cfg readme.md Data/
+          cd src/For_Players && zip -r ../../StarStrings-LIVE.zip USER.cfg readme.md Data/
 
       - name: Delete existing 'latest' release (if any)
         run: |
