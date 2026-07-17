@@ -1,7 +1,8 @@
 # MrKraken's String Replacements
 ### (English) Community Translated .ini for **Star Citizen [Build: sc-alpha-4.9.0_live_12232306]**
+# ⚠️ You **need** to check for an update to this file every patch ⚠️
 > [!WARNING]
-> You **will need to check for an update to this file every patch** - I don't recommend using custom strings on PTU as each new build will likely add new strings. I have an automation setup to push new versions live but please keep in mind that I am UK based and PTU builds normally go up very late UK time, so there may be a few hours delay
+> I don't recommend using custom strings on PTU as each new build will likely add new strings, this will result in you seeing blank contracts & "missing" text. I try to update ASAP after a build but it's not always possible.
 # Changes Included
 ### Contracts
 - Contracts that award blueprints have the potential pool added to the end of the description
@@ -21,6 +22,7 @@
   - To → From locations added (with thanks to WayfinderDrax for the idea)
 - Contracts that award scenario progress (Eg. Return of Xenothreat) show how many points & if they are split
 - Added reputation award amount to all contracts (title & description)
+- Added asteroid RS values to scanning contract objectives
 ### Mining
 - Hephaestanite (Raw) shortened to Heph (Raw)
 - Mining UI text shortened to avoid crossover with values
@@ -53,7 +55,7 @@ If you want to use bits from different translation packs you've found, check out
 - Rayari "Need More Research Data" is a generic description/title re-used for many different contracts, most not awarding blueprints.
   - The title shows [BP] but I have added a caveat that it's for Yormandi Eyes Only
 # Installation
-1. Download the latest release on the right hand side
+1. Download the [latest release ](https://github.com/MrKraken/StarStrings/releases/tag/latest)on the right hand side
 2. Extract the ZIP file.
 3. If you already have a user.cfg file, do not overwrite it. Instead, open your existing user.cfg and add the following line at the end `g_language = english`
 4. Copy the data folder and the (user.cfg) file into your game’s LIVE folder root.
