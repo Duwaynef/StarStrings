@@ -5,6 +5,10 @@ on:
     - cron: '0 0 * * *' # Runs daily at midnight UTC
   workflow_dispatch:   # Allows manual trigger
 
+# CRITICAL: Grants the runner permission to push commits back to your repository
+permissions:
+  contents: write
+
 jobs:
   sync-dynamic-branches:
     runs-on: ubuntu-latest
@@ -14,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 2: Configure Git identity
       - name: Configure Git
@@ -24,16 +29,19 @@ jobs:
       # Step 3: Add the parent repo as 'upstream' and fetch its branches
       - name: Add Upstream Remote
         run: |
-          # CHANGE THIS to the parent repository you forked from
-          git remote add upstream https://github.com/MrKraken/StarStrings.git
+          git remote add upstream https://github.com/MrKraken/StarStrings.git || git remote set-url upstream https://github.com/MrKraken/StarStrings.git
           git fetch upstream --prune
 
       # Step 4: Dynamically detect and merge all branches
       - name: Detect and Sync All Remote Branches
         run: |
-          # 1. Ask Git for all branches on the upstream remote, 
-          # and clean up the text output to get pure branch names.
-          UPSTREAM_BRANCHES=$(git branch -r | grep 'upstream/' | grep -v 'HEAD' | sed 's/^[[:space:]]*upstream\///')
+          # 1. Fetch upstream branches safely (using || true so empty grep doesn't trigger set -e)
+          UPSTREAM_BRANCHES=$(git branch -r | grep 'upstream/' | grep -v 'HEAD' | sed 's/^[[:space:]]*upstream\///' || true)
+
+          if [ -z "$UPSTREAM_BRANCHES" ]; then
+            echo "[!] No upstream branches found to sync."
+            exit 0
+          fi
 
           echo "[*] Found the following upstream branches to sync:"
           echo "$UPSTREAM_BRANCHES"
@@ -44,23 +52,25 @@ jobs:
             echo "[*] Dynamically syncing branch: $branch"
             echo "------------------------------------------------------"
 
-            # 3. Track or switch to your fork's copy of that branch
-            # If your fork doesn't have it locally yet, this creates it tracking the origin
-            if git show-ref --verify --quiet refs/heads/$branch; then
-              git checkout $branch
+            # 3. Track or switch to your fork's copy of that branch safely
+            if git show-ref --verify --quiet "refs/heads/$branch"; then
+              git checkout "$branch"
+            elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+              git checkout -b "$branch" "origin/$branch"
             else
-              # If the branch exists on your GitHub online but not in this temporary runner runner, pull it down
-              git checkout -b $branch origin/$branch || git checkout -b $branch upstream/$branch
+              git checkout -b "$branch" "upstream/$branch"
             fi
 
-            # 4. Safely merge the parent's matching branch into yours
-            if git merge upstream/$branch --allow-unrelated-histories -m "Automated sync: Merged upstream $branch updates"; then
-              
-              # 5. Push the updates back up to your GitHub fork
-              git push origin $branch
-              echo "[+] Successfully synced $branch"
+            # 4. Merge parent's matching branch
+            if git merge "upstream/$branch" --allow-unrelated-histories -m "Automated sync: Merged upstream $branch updates"; then
+              # 5. Push wrapped in an if-statement so a push rejection doesn't crash the runner
+              if git push origin "$branch"; then
+                echo "[+] Successfully synced $branch"
+              else
+                echo "[!] Push failed for $branch (check branch protection settings)."
+              fi
             else
-              echo "[!] Merge conflict detected on $branch. Skipping push. You will need to fix this manually."
-              git merge --abort
+              echo "[!] Merge conflict detected on $branch. Skipping push."
+              git merge --abort || true
             fi
           done
