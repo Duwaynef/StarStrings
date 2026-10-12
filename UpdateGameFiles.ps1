@@ -97,8 +97,10 @@ Get-ChildItem -Path $SelectedFolder -Recurse | Where-Object {
     $IncludePatterns | Where-Object { $Name -like $_ }
 } | ForEach-Object {
     # Calculate relative path based on the selected branch folder, not the script root
-    $RelativePath = $_.FullName.Substring($SelectedFolder.Length).TrimStart('\')
+    $RelativePath = $_.FullName.Substring($SelectedFolder.Length).TrimStart('\src\For_Players\')
     $DestinationPath = Join-Path $StarCitizenPath $RelativePath
+
+    Write-Host "Syncing: $DestinationPath" -ForegroundColor DarkGray
 
     if ($_.PSIsContainer) {
         if (-not (Test-Path $DestinationPath)) {
@@ -112,7 +114,7 @@ Get-ChildItem -Path $SelectedFolder -Recurse | Where-Object {
         }
 
         Copy-Item -Path $_.FullName -Destination $DestinationPath -Force
-        Write-Host " Updated: $RelativePath" -ForegroundColor DarkGray
+        Write-Host " Updated: $DestinationPath" -ForegroundColor DarkGray
     }
 }
 
